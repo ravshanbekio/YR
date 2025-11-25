@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Admin Paneli - Vakansiyalar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* CSS for the mobile menu button icon (Hamburger menu) */
+        .mobile-menu-button-icon {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 20px;
+            height: 16px;
+        }
+        .mobile-menu-button-icon span {
+            display: block;
+            height: 2px;
+            width: 100%;
+            background-color: #3b82f6; /* blue-500 */
+            transition: all 0.3s ease;
+        }
+        .mobile-menu-button-icon.active span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+        .mobile-menu-button-icon.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .mobile-menu-button-icon.active span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+    <header class="md:hidden flex justify-between items-center bg-slate-900 border-b border-slate-800 p-4">
+        <h1 class="text-xl font-bold text-blue-400">HR Admin</h1>
+        <button id="mobile-menu-button" class="text-blue-400 hover:text-blue-300 focus:outline-none">
+            <div class="mobile-menu-button-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
+    </header>
+
+    <div class="flex h-screen overflow-hidden">
+        <aside id="sidebar" class="w-64 bg-slate-900 border-r border-slate-800 p-6 overflow-y-auto absolute md:relative z-40 h-full flex-shrink-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-blue-400">HR Admin</h1>
+                <p class="text-slate-400 text-sm mt-1">Ishchi kuchini boshqaring</p>
+            </div>
+
+            <nav class="space-y-2 flex flex-col">
+                <a href="index.html" class="nav-link w-full block" data-page="dashboard">
+                    <span class="inline-block w-5 h-5 mr-3">📊</span> Boshqaruv Paneli
+                </a>
+                <a href="vacancies.html" class="nav-link active w-full block" data-page="vacancies">
+                    <span class="inline-block w-5 h-5 mr-3">💼</span> Vakansiyalar
+                </a>
+                <a href="questions.html" class="nav-link w-full block" data-page="questions">
+                    <span class="inline-block w-5 h-5 mr-3">❓</span> Savollar
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto pt-4 md:pt-0">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Vakansiyalar</h2>
+                        <p class="text-slate-400">Ish joylari va lavozimlarni boshqaring</p>
+                    </div>
+                    <button id="addVacancyBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition">
+                        + Vakansiya qo'shish
+                    </button>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-800">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold">Vakansiya nomi</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold">Holati</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold">Amallar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vacanciesList" class="divide-y divide-slate-800">
+                                </tbody>
+                        </table>
+                        <div id="loadingVacancies" class="text-center py-8 text-blue-400">
+                            Vakansiyalar yuklanmoqda...
+                        </div>
+                        <div id="noVacancies" class="text-center py-8 text-slate-400" style="display: none;">
+                            Hozircha vakansiyalar mavjud emas
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="vacancyModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-lg p-8 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-6" id="modalTitle">Vakansiya qo'shish</h3>
+            
+            <form id="vacancyForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2" for="vacancyTitle">Lavozim nomi (*)</label>
+                    <input type="text" id="vacancyTitle" class="w-full bg-slate-800 border border-slate-700 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold mb-2" for="vacancyDescription">To'liq ma'lumot (Ixtiyoriy)</label>
+                    <textarea id="vacancyDescription" class="w-full bg-slate-800 border border-slate-700 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500 h-24"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold mb-2" for="vacancyStatus">Holati</label>
+                    <select id="vacancyStatus" class="w-full bg-slate-800 border border-slate-700 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                        <option value="open">Ochiq</option>
+                        <option value="closed">Yopiq</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" id="saveVacancyBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold transition">
+                        Saqlash
+                    </button>
+                    <button type="button" id="closeModal" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded font-semibold transition">
+                        Bekor qilish
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>  
+
+    <script>
+        const BASE_URL = '';
+        const CREATE_URL = `${BASE_URL}/vacancies/create`;
+        const GET_ALL_URL = `${BASE_URL}/vacancies/get_all`;
+
+        let editingId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchVacancies();
+            setupEventListeners();
+            
+            // Mobile menu toggle logic
+            const sidebar = document.getElementById('sidebar');
+            const menuButton = document.getElementById('mobile-menu-button');
+            const menuButtonIcon = document.querySelector('.mobile-menu-button-icon');
+
+            if (menuButton) {
+                menuButton.addEventListener('click', function() {
+                    sidebar.classList.toggle('-translate-x-full');
+                    menuButtonIcon.classList.toggle('active');
+                });
+            }
+        });
+
+        function setupEventListeners() {
+            document.getElementById('addVacancyBtn').addEventListener('click', () => openModal());
+            document.getElementById('closeModal').addEventListener('click', () => closeModal());
+            document.getElementById('vacancyForm').addEventListener('submit', handleSubmit);
+        }
+        
+        // --- READ/GET FUNCTION ---
+        async function fetchVacancies() {
+            const tbody = document.getElementById('vacanciesList');
+            const noVacancies = document.getElementById('noVacancies');
+            const loadingElement = document.getElementById('loadingVacancies');
+            
+            tbody.innerHTML = '';
+            loadingElement.style.display = 'block';
+
+            try {
+                const response = await fetch(GET_ALL_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP xatosi! status: ${response.status}`);
+                }
+                
+                const vacanciesData = await response.json(); 
+                
+                if (vacanciesData.length === 0) {
+                    noVacancies.style.display = 'block';
+                    noVacancies.textContent = "Hozircha vakansiyalar mavjud emas";
+                    return;
+                }
+
+                noVacancies.style.display = 'none';
+
+                // Render the fetched vacancies
+                vacanciesData.forEach(vacancy => {
+                    const statusText = vacancy.is_open ? 'Ochiq' : 'Yopiq';
+                    const statusColor = vacancy.is_open ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400';
+                    
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-3">${vacancy.title}</td>
+                        <td class="px-6 py-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColor}">
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 space-x-2">
+                            <button onclick="editVacancy(${vacancy.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition">Tahrirlash</button>
+                            <button onclick="deleteVacancy(${vacancy.id})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition">O'chirish</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error("Vakansiyalarni yuklashda xato:", error);
+                loadingElement.textContent = "Ma'lumotlarni yuklashda xatolik yuz berdi. API ulanishini tekshiring.";
+                noVacancies.style.display = 'none';
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        }
+        
+        // --- CREATE/POST FUNCTION ---
+        async function createVacancy(vacancyData) {
+            try {
+                const response = await fetch(CREATE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(vacancyData),
+                });
+
+                if (response.status === 201 || response.status === 200) {
+                    // REMOVED: alert("Vakansiya muvaffaqiyatli qo'shildi!");
+                    
+                    // NEW: Full page reload after successful creation
+                    window.location.reload(); 
+                } else {
+                    const errorData = await response.json();
+                    alert(`Vakansiya qo'shishda xato: ${errorData.detail || response.statusText}`);
+                }
+
+            } catch (error) {
+                console.error('Vakansiya yaratishda xato:', error);
+                alert(`API'ga ulanishda xato yuz berdi: ${error.message}`);
+            }
+        }
+
+        // --- HANDLERS ---
+        function openModal(title = "Vakansiya qo'shish") {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('vacancyForm').reset();
+            document.getElementById('vacancyModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('vacancyModal').classList.add('hidden');
+            editingId = null;
+        }
+        
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('vacancyTitle').value;
+            let description = document.getElementById('vacancyDescription').value.trim();
+            const status = document.getElementById('vacancyStatus').value;
+            
+            // Description can be null/empty string
+            if (description === "") {
+                description = null; 
+            }
+
+            const is_open = status === 'open';
+
+            const vacancyData = {
+                title: title,
+                description: description,
+                is_open: is_open
+            };
+
+            if (editingId !== null) {
+                // Update logic would go here
+                alert("Tahrirlash funksiyasi (PUT) hali implementatsiya qilinmagan.");
+            } else {
+                // POST request (Create)
+                await createVacancy(vacancyData);
+            }
+        }
+        
+        function editVacancy(id) {
+            alert(`Tahrirlash funksiyasi faol emas. Vakansiya ID: ${id}. PUT API kerak.`);
+        }
+
+        function deleteVacancy(id) {
+            if (confirm(`Rostdan ham ID: ${id} bo'lgan vakansiyani o'chirmoqchimisiz?`)) {
+                alert(`O'chirish funksiyasi faol emas. DELETE API kerak. ID: ${id}`);
+                // DELETE logic would go here: 
+                // await deleteVacancyAPI(id);
+                fetchVacancies(); // Refresh list after mock action
+            }
+        }
+    </script>
+</body>
+</html> 

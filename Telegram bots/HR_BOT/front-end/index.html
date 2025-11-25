@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Admin Paneli - Boshqaruv Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Ixtiyoriy CSS mobil menyu tugmasi uchun */
+        .mobile-menu-button-icon {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 20px;
+            height: 16px;
+        }
+        .mobile-menu-button-icon span {
+            display: block;
+            height: 2px;
+            width: 100%;
+            background-color: #3b82f6; /* blue-500 */
+            transition: all 0.3s ease;
+        }
+        .mobile-menu-button-icon.active span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+        .mobile-menu-button-icon.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .mobile-menu-button-icon.active span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+    <header class="md:hidden flex justify-between items-center bg-slate-900 border-b border-slate-800 p-4">
+        <h1 class="text-xl font-bold text-blue-400">HR Admin</h1>
+        <button id="mobile-menu-button" class="text-blue-400 hover:text-blue-300 focus:outline-none">
+            <div class="mobile-menu-button-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
+    </header>
+
+    <div class="flex h-screen overflow-hidden">
+        <aside id="sidebar" class="w-64 bg-slate-900 border-r border-slate-800 p-6 overflow-y-auto absolute md:relative z-40 h-full flex-shrink-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-blue-400">HR Admin</h1>
+                <p class="text-slate-400 text-sm mt-1">Ishchi kuchini boshqaring</p>
+            </div>
+
+            <nav class="space-y-2 flex flex-col">
+                <a href="index.html" class="nav-link active w-full block" data-page="dashboard">
+                    <span class="inline-block w-5 h-5 mr-3">📊</span> Boshqaruv Paneli
+                </a>
+                <a href="vacancies.html" class="nav-link w-full block" data-page="vacancies">
+                    <span class="inline-block w-5 h-5 mr-3">💼</span> Vakansiyalar
+                </a>
+                <a href="questions.html" class="nav-link w-full block" data-page="questions">
+                    <span class="inline-block w-5 h-5 mr-3">❓</span> Savollar
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto pt-4 md:pt-0"> 
+            <div class="p-8">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold mb-2">Boshqaruv Paneli</h2>
+                    <p class="text-slate-400">HR boshqaruv tizimiga xush kelibsiz</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-slate-900 border border-slate-800 rounded-lg p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-slate-400 text-sm">Mavjud Vakansiyalar</p>
+                                <p class="text-3xl font-bold text-blue-400 mt-2" id="totalVacancies">0</p>
+                            </div>
+                            <div class="text-4xl">💼</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-lg p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-slate-400 text-sm">Yangi Arizalar</p>
+                                <p class="text-3xl font-bold text-green-400 mt-2" id="newApplications">0</p>
+                            </div>
+                            <div class="text-4xl">📨</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-lg p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-slate-400 text-sm">Jami Savollar</p>
+                                <p class="text-3xl font-bold text-purple-400 mt-2" id="totalQuestions">0</p>
+                            </div>
+                            <div class="text-4xl">❓</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-lg p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-slate-400 text-sm">Jami Nomzodlar</p>
+                                <p class="text-3xl font-bold text-orange-400 mt-2" id="totalApplicants">0</p>
+                            </div>
+                            <div class="text-4xl">👥</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
+                    <div class="p-6 border-b border-slate-800">
+                        <h3 class="text-xl font-bold">So'nggi Nomzodlar (Oxirgi 10 ta)</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-800">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold">FIO</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold">Vakansiya</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold">Telegram manzil</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold">chat ID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentApplicants" class="divide-y divide-slate-800">
+                                </tbody>
+                        </table>
+                        <div id="noApplicants" class="text-center py-8 text-slate-400" style="display: none;">
+                            Hali arizalar yo'q
+                        </div>
+                        <div id="loadingApplicants" class="text-center py-8 text-blue-400">
+                            Nomzodlar yuklanmoqda...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Set the base URL 
+        const BASE_URL = '';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initiate the API call to update the dashboard data
+            updateDashboard();
+
+            // Mobile menu toggle logic
+            const sidebar = document.getElementById('sidebar');
+            const menuButton = document.getElementById('mobile-menu-button');
+            const menuButtonIcon = document.querySelector('.mobile-menu-button-icon');
+
+            menuButton.addEventListener('click', function() {
+                sidebar.classList.toggle('-translate-x-full');
+                menuButtonIcon.classList.toggle('active');
+            });
+        });
+
+        async function updateDashboard() {
+            const loadingElement = document.getElementById('loadingApplicants');
+            const noApplicantsElement = document.getElementById('noApplicants');
+            
+            loadingElement.style.display = 'block';
+
+            try {
+                // Fetch Applicants/Users data
+                const response = await fetch(`${BASE_URL}/users/get_users`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const applicantsData = await response.json(); 
+                
+                // --- DATA MAPPING AND ENRICHMENT ---
+                // We map the API fields to the desired data structure.
+                // NOTE: 'status' is still mocked to calculate 'New Applications' count.
+                const applications = applicantsData.map((applicant, index) => ({
+                    // Actual data fields from API:
+                    fullName: applicant.full_name, // FIO
+                    position: applicant.title,     // Vakansiya
+                    username: applicant.username,  // Telegram manzil
+                    chatId: applicant.chat_id,     // chat ID
+
+                    // Mock field for Dashboard KPI (New Applications count):
+                    status: index % 3 === 0 ? 'reviewing' : 'new', // Simple cycle
+                }));
+                
+                // Placeholder/Mock data for other sections until their APIs are available
+                const vacancies = []; // Empty array for 'Mavjud Vakansiyalar'
+                const questions = []; // Empty array for 'Jami Savollar'
+
+                // 1. Update the Metric Cards
+                document.getElementById('totalVacancies').textContent = vacancies.length;
+                document.getElementById('totalQuestions').textContent = questions.length;
+                document.getElementById('totalApplicants').textContent = applications.length;
+                
+                // Calculate 'Yangi Arizalar' based on mocked status
+                document.getElementById('newApplications').textContent = applications.filter(app => app.status === 'new').length;
+
+                // 2. Update the Recent Applicants Table
+                displayRecentApplicants(applications);
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                loadingElement.textContent = "Ma'lumotlarni yuklashda xatolik yuz berdi. API ulanishini tekshiring.";
+                noApplicantsElement.style.display = 'none';
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        }
+
+        function displayRecentApplicants(applications) {
+            const tbody = document.getElementById('recentApplicants');
+            const noApplicants = document.getElementById('noApplicants');
+            
+            tbody.innerHTML = '';
+            
+            // Just take the first 10 applicants as there's no date field to sort by
+            const recent = applications.slice(0, 10);
+            
+            if (recent.length === 0) {
+                noApplicants.style.display = 'block';
+                noApplicants.textContent = "Hali arizalar yo'q";
+                tbody.style.display = 'none';
+            } else {
+                noApplicants.style.display = 'none';
+                tbody.style.display = 'table-row-group'; 
+                
+                recent.forEach(app => {
+                    const row = document.createElement('tr');
+                    
+                    // Create a clickable link for Telegram username if available
+                    const telegramLink = app.username ? `<a href="https://t.me/${app.username.replace('@', '')}" target="_blank" class="text-blue-400 hover:text-blue-300">${app.username}</a>` : 'N/A';
+                    
+                    // NEW: Create a clickable link for the full name to user_detail.html
+                    const fullNameLink = app.fullName 
+                        ? `<a href="user_detail.html?chat_id=${app.chatId}" class="text-blue-400 hover:text-blue-300 font-medium">${app.fullName}</a>` 
+                        : 'N/A';
+
+                    row.innerHTML = `
+                        <td class="px-6 py-3">${fullNameLink}</td>
+                        <td class="px-6 py-3">${app.position || 'N/A'}</td>
+                        <td class="px-6 py-3 text-sm text-slate-300">${telegramLink}</td>
+                        <td class="px-6 py-3 text-sm text-slate-300">${app.chatId || 'N/A'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

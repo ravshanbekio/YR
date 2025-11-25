@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Admin Paneli - Foydalanuvchi Tafsilotlari</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Hamburger menu CSS (oldingi koddan olingan) */
+        .mobile-menu-button-icon {  
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 20px;
+            height: 16px;
+        }
+        .mobile-menu-button-icon span {
+            display: block;
+            height: 2px;
+            width: 100%;
+            background-color: #3b82f6; /* blue-500 */
+            transition: all 0.3s ease;
+        }
+        .mobile-menu-button-icon.active span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+        .mobile-menu-button-icon.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .mobile-menu-button-icon.active span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+    <header class="md:hidden flex justify-between items-center bg-slate-900 border-b border-slate-800 p-4">
+        <h1 class="text-xl font-bold text-blue-400">HR Admin</h1>
+        <button id="mobile-menu-button" class="text-blue-400 hover:text-blue-300 focus:outline-none">
+            <div class="mobile-menu-button-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
+    </header>
+
+    <div class="flex h-screen overflow-hidden">
+        <aside id="sidebar" class="w-64 bg-slate-900 border-r border-slate-800 p-6 overflow-y-auto absolute md:relative z-40 h-full flex-shrink-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-blue-400">HR Admin</h1>
+                <p class="text-slate-400 text-sm mt-1">Ishchi kuchini boshqaring</p>
+            </div>
+
+            <nav class="space-y-2 flex flex-col">
+                <a href="index.html" class="nav-link w-full block active" data-page="users">
+                    <span class="inline-block w-5 h-5 mr-3">📊</span> Boshqaruv Paneli
+                </a>
+                <a href="vacancies.html" class="nav-link w-full block" data-page="vacancies">
+                    <span class="inline-block w-5 h-5 mr-3">💼</span> Vakansiyalar
+                </a>
+                <a href="questions.html" class="nav-link w-full block" data-page="questions">
+                    <span class="inline-block w-5 h-5 mr-3">❓</span> Savollar
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto pt-4 md:pt-0">
+            <div class="p-8">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold mb-2">Foydalanuvchi Tafsilotlari</h2>
+                    <p class="text-slate-400" id="user-status">Ma'lumotlar yuklanmoqda...</p>
+                </div>
+                
+                <div id="loading-spinner" class="text-center py-10">
+                    <div class="animate-spin inline-block w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full"></div>
+                    <p class="text-blue-400 mt-3">Yuklanmoqda...</p>
+                </div>
+
+                <div id="user-content" class="space-y-10" style="display: none;">
+                    
+                    <div class="bg-slate-900 border border-slate-800 rounded-lg p-6">
+                        <h3 class="text-2xl font-semibold text-blue-400 mb-4">Asosiy Ma'lumotlar ℹ️</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-3 bg-slate-800/50 rounded-md">
+                                <p class="text-sm text-slate-400">To'liq ism</p>
+                                <p class="text-lg font-medium" id="detail-full-name">N/A</p>
+                            </div>
+                            <div class="p-3 bg-slate-800/50 rounded-md">
+                                <p class="text-sm text-slate-400">Telegram Username</p>
+                                <p class="text-lg font-medium" id="detail-username">N/A</p>
+                            </div>
+                            <div class="p-3 bg-slate-800/50 rounded-md">
+                                <p class="text-sm text-slate-400">Telegram Chat ID</p>
+                                <p class="text-lg font-medium" id="detail-chat-id">N/A</p>
+                            </div>
+                            <div class="p-3 bg-slate-800/50 rounded-md">
+                                <p class="text-sm text-slate-400">Telefon raqami</p>
+                                <p class="text-lg font-medium" id="detail-phone-number">N/A</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="vacancy-answers-container">
+                        <h3 class="text-2xl font-semibold text-blue-400 mb-4">To'ldirilgan Anketalar 📋</h3>
+                        </div>
+                    
+                </div>
+
+                <div id="error-message" class="bg-red-900/20 border border-red-700 p-4 rounded-lg mt-8" style="display: none;">
+                    <p class="text-red-400 font-semibold">Xatolik:</p>
+                    <p class="text-red-300" id="error-text">Foydalanuvchi ma'lumotlarini yuklab bo'lmadi.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const BASE_URL = '';
+        const GET_USER_URL = `${BASE_URL}/users/get_user`;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const chatId = urlParams.get('chat_id'); // URLdan chat_id ni olish
+            
+            if (chatId) {
+                document.getElementById('user-status').textContent = `Foydalanuvchi ID: ${chatId} ma'lumotlari yuklanmoqda...`;
+                fetchUserDetails(chatId);
+            } else {
+                displayError("URL'da 'chat_id' parametri topilmadi. Iltimos, to'g'ri havoladan foydalaning.");
+                document.getElementById('loading-spinner').style.display = 'none';
+            }
+            
+            // Mobile menu toggle logic
+            const sidebar = document.getElementById('sidebar');
+            const menuButton = document.getElementById('mobile-menu-button');
+            const menuButtonIcon = document.querySelector('.mobile-menu-button-icon');
+
+            if (menuButton) {
+                menuButton.addEventListener('click', function() {
+                    sidebar.classList.toggle('-translate-x-full');
+                    menuButtonIcon.classList.toggle('active');
+                });
+            }
+        });
+
+        /**
+         * Foydalanuvchi ma'lumotlarini API'dan yuklaydi va sahifaga joylaydi.
+         * @param {string} chatId - Telegram chat ID.
+         */
+        async function fetchUserDetails(chatId) {
+            try {
+                const response = await fetch(`${GET_USER_URL}?chat_id=${chatId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP xatosi! Status: ${response.status}`);
+                }
+                
+                const userData = await response.json(); 
+                
+                // 1. Asosiy ma'lumotlarni ko'rsatish
+                displayUserInfo(userData);
+
+                // 2. Javoblarni ko'rsatish
+                displayUserAnswers(userData.vacancy);
+
+            } catch (error) {
+                console.error('Foydalanuvchini yuklashda xato:', error);
+                displayError(`Ma'lumotlarni yuklab bo'lmadi. API xatosi yoki foydalanuvchi topilmadi. (${error.message})`);
+            } finally {
+                document.getElementById('loading-spinner').style.display = 'none';
+                document.getElementById('user-content').style.display = 'block';
+            }
+        }
+
+        /**
+         * Asosiy foydalanuvchi ma'lumotlarini DOMga joylaydi.
+         */
+        function displayUserInfo(user) {
+            document.getElementById('detail-full-name').textContent = user.full_name || 'Kiritilmagan';
+            document.getElementById('detail-username').textContent = user.username ? `@${user.username}` : 'Kiritilmagan';
+            document.getElementById('detail-chat-id').textContent = user.chat_id;
+            document.getElementById('detail-phone-number').textContent = user.phone_number || 'Kiritilmagan';
+            
+            document.getElementById('user-status').textContent = `Foydalanuvchi: ${user.full_name || user.chat_id}`;
+        }
+
+        /**
+         * Har bir vakansiya bo'yicha savollar va javoblarni DOMga joylaydi.
+         */
+        function displayUserAnswers(vacancies) {
+            const container = document.getElementById('vacancy-answers-container');
+            
+            if (!vacancies || vacancies.length === 0) {
+                container.innerHTML = `<div class="p-6 bg-slate-900 border border-slate-800 rounded-lg text-slate-400">Foydalanuvchi hali anketalarni to'ldirmagan.</div>`;
+                return;
+            }
+
+            vacancies.forEach(vacancy => {
+                const vacancyCard = document.createElement('div');
+                vacancyCard.className = 'bg-slate-900 border border-slate-800 rounded-lg p-6 shadow-xl mb-6';
+                
+                let questionsHtml = '';
+                
+                if (vacancy.questions && vacancy.questions.length > 0) {
+                    questionsHtml = vacancy.questions.map(q => {
+                        const answerText = q.answer?.text_answer || q.answer?.file_answer || "Javob berilmagan";
+                        const answerClass = answerText === "Javob berilmagan" ? 'text-slate-500' : 'text-slate-200';
+                        
+                        return `
+                            <div class="border-b border-slate-800 py-3 last:border-b-0">
+                                <p class="text-sm font-medium text-slate-400">${q.title} <span class="text-xs ml-2 bg-blue-900/30 px-2 py-0.5 rounded">${q.question_type.charAt(0).toUpperCase() + q.question_type.slice(1)}</span></p>
+                                <p class="text-base mt-1 font-semibold ${answerClass}">${answerText}</p>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                     questionsHtml = `<div class="text-slate-500 py-3">Bu vakansiya uchun savollar topilmadi.</div>`;
+                }
+
+                vacancyCard.innerHTML = `
+                    <h4 class="text-xl font-bold text-orange-400 mb-4">${vacancy.title}</h4>
+                    <p class="text-slate-400 mb-4 text-sm">${(vacancy.description ?? 'Tavsif yo\'q.').substring(0, 100)}...</p>
+                    <div class="divide-y divide-slate-800 mt-2">
+                        ${questionsHtml}
+                    </div>
+                `;
+                
+                container.appendChild(vacancyCard);
+            });
+        }
+
+        /**
+         * Xatolik xabarini ko'rsatish funksiyasi.
+         */
+        function displayError(message) {
+            document.getElementById('error-text').textContent = message;
+            document.getElementById('error-message').style.display = 'block';
+            document.getElementById('user-content').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

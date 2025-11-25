@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+  nginx_proxy_manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx_proxy_manager
+    restart: always
+    ports:
+      - '80:80'
+      - '443:443'
+      - '81:81'    # NPM Web Interface
+    volumes:
+      - ./npm/data:/data
+      - ./npm/letsencrypt:/etc/letsencrypt
+    networks:
+      - network
+
+  frontend:
+    image: nginx:alpine
+    container_name: frontend_container_name
+    restart: always
+    networks:
+      - network
+    volumes:
+      - ./front-end:/usr/share/nginx/html:ro
+
+  backend:
+    build: ./backend
+    container_name: backend_container_name
+    # ports:
+    #   - '8000:8000'
+    networks:
+      - network
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - redis
+    restart: always
+
+  bot:
+    build: ./bot
+    container_name: bot_container_name
+    networks: 
+      - network
+    env_file:
+      - ./bot/.env
+    depends_on:
+      - backend
+      - redis
+    restart: always
+
+  redis:
+    image: redis:7
+    networks:
+      - network
+    container_name: redis_container_name
+    restart: always 
+  
+networks:
+  network:
+    driver: bridge

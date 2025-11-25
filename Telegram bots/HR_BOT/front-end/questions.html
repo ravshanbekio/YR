@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Admin Paneli - Savollar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* CSS for the mobile menu button icon (Hamburger menu) */
+        .mobile-menu-button-icon {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 20px;
+            height: 16px;
+        }
+        .mobile-menu-button-icon span {
+            display: block;
+            height: 2px;
+            width: 100%;
+            background-color: #3b82f6; /* blue-500 */
+            transition: all 0.3s ease;
+        }
+        .mobile-menu-button-icon.active span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+        .mobile-menu-button-icon.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .mobile-menu-button-icon.active span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+    <header class="md:hidden flex justify-between items-center bg-slate-900 border-b border-slate-800 p-4">
+        <h1 class="text-xl font-bold text-blue-400">HR Admin</h1>
+        <button id="mobile-menu-button" class="text-blue-400 hover:text-blue-300 focus:outline-none">
+            <div class="mobile-menu-button-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
+    </header>
+
+    <div class="flex h-screen overflow-hidden">
+        <aside id="sidebar" class="w-64 bg-slate-900 border-r border-slate-800 p-6 overflow-y-auto absolute md:relative z-40 h-full flex-shrink-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-blue-400">HR Admin</h1>
+                <p class="text-slate-400 text-sm mt-1">Ishchi kuchini boshqaring</p>
+            </div>
+
+            <nav class="space-y-2 flex flex-col">
+                <a href="index.html" class="nav-link w-full block" data-page="dashboard">
+                    <span class="inline-block w-5 h-5 mr-3">📊</span> Boshqaruv Paneli
+                </a>
+                <a href="vacancies.html" class="nav-link w-full block" data-page="vacancies">
+                    <span class="inline-block w-5 h-5 mr-3">💼</span> Vakansiyalar
+                </a>
+                <a href="questions.html" class="nav-link active w-full block" data-page="questions">
+                    <span class="inline-block w-5 h-5 mr-3">❓</span> Savollar
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto pt-4 md:pt-0">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Savollar</h2>
+                        <p class="text-slate-400">Intervyu savollarini boshqaring</p>
+                    </div>
+                    <button id="addQuestionBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition">
+                        + Savol qo'shish
+                    </button>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-800">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold">Savol</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold">Savol turi</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold">Majburiy</th>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold">Amallar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="questionsList" class="divide-y divide-slate-800">
+                                </tbody>
+                        </table>
+                        <div id="loadingQuestions" class="text-center py-8 text-blue-400">
+                            Savollar yuklanmoqda...
+                        </div>
+                        <div id="noQuestions" class="text-center py-8 text-slate-400" style="display: none;">
+                            Hozircha savollar mavjud emas
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+        <div id="questionModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-lg p-8 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-6" id="modalTitle">Savol qo'shish</h3>
+            
+            <form id="questionForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2" for="vacancySelect">Vakansiyani tanlang (*)</label>
+                    <select id="vacancySelect" class="w-full bg-slate-800 border border-slate-700 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500" required>
+                        <option value="" disabled selected>Yuklanmoqda...</option>
+                    </select>
+                    <div id="vacancyLoadStatus" class="text-xs mt-1 text-slate-400">Vakansiyalar yuklanmoqda...</div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold mb-2" for="questionTitle">Savol matni (*)</label>
+                    <textarea id="questionTitle" class="w-full bg-slate-800 border border-slate-700 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500 h-24" required></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold mb-2" for="questionType">Savol turi (*)</label>
+                    <select id="questionType" class="w-full bg-slate-800 border border-slate-700 rounded px-4 py-2 text-white focus:outline-none focus:border-blue-500" required>
+                        <option value="tekst">Tekst</option>
+                        <!-- <option value="ko'p tanlov">Fayl</option> -->  
+                    </select>
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" id="isRequired" class="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 rounded focus:ring-blue-500">
+                    <label for="isRequired" class="ml-2 text-sm font-semibold">Majburiy javob</label>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" id="saveQuestionBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold transition">
+                        Saqlash
+                    </button>
+                    <button type="button" id="closeModal" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded font-semibold transition">
+                        Bekor qilish
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = '';
+        const GET_QUESTIONS_URL = `${BASE_URL}/questions/get_all`; 
+        const CREATE_QUESTION_URL = `${BASE_URL}/questions/create`;
+        const GET_VACANCIES_URL = `${BASE_URL}/vacancies/get_all`;
+
+        let editingId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load existing questions
+            fetchQuestions();
+            setupEventListeners();
+            
+            // Mobile menu toggle logic
+            const sidebar = document.getElementById('sidebar');
+            const menuButton = document.getElementById('mobile-menu-button');
+            const menuButtonIcon = document.querySelector('.mobile-menu-button-icon');
+
+            if (menuButton) {
+                menuButton.addEventListener('click', function() {
+                    sidebar.classList.toggle('-translate-x-full');
+                    menuButtonIcon.classList.toggle('active');
+                });
+            }
+        });
+
+        function setupEventListeners() {
+            // Modal event listeners
+            document.getElementById('addQuestionBtn').addEventListener('click', () => openModal());
+            document.getElementById('closeModal').addEventListener('click', () => closeModal());
+            document.getElementById('questionForm').addEventListener('submit', handleSubmit);
+        }
+        
+        // --- API FUNCTIONS ---
+
+        /**
+         * Vakansiyalarni yuklaydi va select dropdown ro'yxatini to'ldiradi.
+         */
+        async function fetchVacanciesForSelect() {
+            const select = document.getElementById('vacancySelect');
+            const statusElement = document.getElementById('vacancyLoadStatus');
+            select.innerHTML = '<option value="" disabled selected>Yuklanmoqda...</option>';
+            statusElement.textContent = "Vakansiyalar yuklanmoqda...";
+            select.disabled = true;
+
+            try {
+                const response = await fetch(GET_VACANCIES_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP xatosi! status: ${response.status}`);
+                }
+                const vacanciesList = await response.json(); 
+
+                select.innerHTML = ''; 
+                if (vacanciesList.length === 0) {
+                    select.innerHTML = '<option value="" disabled selected>Vakansiya topilmadi</option>';
+                    statusElement.textContent = "Iltimos, avval vakansiya yarating.";
+                } else {
+                    vacanciesList.forEach(vacancy => {
+                        const option = document.createElement('option');
+                        option.value = vacancy.id; // ID for backend
+                        option.textContent = vacancy.title; // Title for user
+                        select.appendChild(option);
+                    });
+                    // Ensure the first option is selected
+                    select.value = vacanciesList[0].id;
+                    statusElement.textContent = "Yuklandi.";
+                    select.disabled = false;
+                }
+            } catch (error) {
+                console.error("Vakansiyalarni yuklashda xato:", error);
+                select.innerHTML = '<option value="" disabled selected>Yuklashda xatolik</option>';
+                statusElement.textContent = "Yuklashda xatolik. API ulanishini tekshiring.";
+                select.disabled = true;
+            }
+        }
+
+        /**
+         * POST /questions/create API orqali yangi savol yaratadi.
+         * Muvaffaqiyatli bo'lsa, alertsiz sahifani yangilaydi.
+         * @param {Object} questionData - Savol ma'lumotlari: { vacancy_id, title, question_type, is_required }
+         */
+        async function createQuestion(questionData) {
+            document.getElementById('saveQuestionBtn').disabled = true;
+            document.getElementById('saveQuestionBtn').textContent = 'Saqlanmoqda...';
+
+            try {
+                const response = await fetch(CREATE_QUESTION_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(questionData),
+                });
+
+                if (response.status === 201 || response.status === 200) {
+                    // Success: Full page reload without alert
+                    window.location.reload(); 
+                } else {
+                    // Error: Show alert
+                    const errorData = await response.json();
+                    alert(`Savol qo'shishda xato: ${errorData.detail || response.statusText}`);
+                }
+
+            } catch (error) {
+                console.error('Savol yaratishda xato:', error);
+                alert(`API'ga ulanishda xato yuz berdi: ${error.message}`);
+            } finally {
+                // Only reset the button if the page didn't reload (i.e., if there was an error)
+                if (document.getElementById('saveQuestionBtn').disabled) {
+                    document.getElementById('saveQuestionBtn').disabled = false;
+                    document.getElementById('saveQuestionBtn').textContent = 'Saqlash';
+                }
+            }
+        }
+        
+        // --- READ/GET FUNCTION (Existing, updated to include action buttons) ---
+        async function fetchQuestions() {
+            const tbody = document.getElementById('questionsList');
+            const noQuestions = document.getElementById('noQuestions');
+            const loadingElement = document.getElementById('loadingQuestions');
+            
+            tbody.innerHTML = '';
+            loadingElement.style.display = 'block';
+
+            try {
+                const response = await fetch(GET_QUESTIONS_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP xatosi! status: ${response.status}`);
+                }
+                
+                const questionsData = await response.json(); 
+                
+                if (questionsData.length === 0) {
+                    noQuestions.style.display = 'block';
+                    noQuestions.textContent = "Hozircha savollar mavjud emas";
+                    return;
+                }
+
+                noQuestions.style.display = 'none';
+
+                // Render the fetched questions
+                questionsData.forEach(question => {
+                    const requiredText = question.is_required ? 'Ha' : 'Yo\'q';
+                    const requiredColor = question.is_required ? 'bg-orange-500/20 text-orange-400' : 'bg-slate-500/20 text-slate-400';
+                    
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-3">${question.title.substring(0, 50)}${question.title.length > 50 ? '...' : ''}</td>
+                        <td class="px-6 py-3">${question.question_type.charAt(0).toUpperCase() + question.question_type.slice(1)}</td>
+                        <td class="px-6 py-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${requiredColor}">
+                                ${requiredText}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 space-x-2">
+                            <button onclick="editQuestion(${question.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition">Tahrirlash</button>
+                            <button onclick="deleteQuestion(${question.id})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition">O'chirish</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error('Savollarni yuklashda xato:', error);
+                loadingElement.textContent = "Ma'lumotlarni yuklashda xatolik yuz berdi. API ulanishini tekshiring.";
+                noQuestions.style.display = 'none';
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        }
+        
+        // --- HANDLERS ---
+        /**
+         * Savol qo'shish/tahrirlash modalini ochadi va vakansiyalarni yuklaydi.
+         * @param {string} [title="Savol qo'shish"] - Modal sarlavhasi.
+         */
+        function openModal(title = "Savol qo'shish") {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('questionForm').reset();
+            // Fetch vacancies when the modal opens
+            fetchVacanciesForSelect();
+            document.getElementById('questionModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('questionModal').classList.add('hidden');
+            editingId = null;
+        }
+        
+        function editQuestion(id) {
+            // Placeholder/Mock function for editing
+            alert(`Tahrirlash funksiyasi faol emas. Savol ID: ${id}. PUT API kerak.`);
+        }
+
+        function deleteQuestion(id) {
+            if (confirm(`Rostdan ham ID: ${id} bo'lgan savolni o'chirmoqchimisiz?`)) {
+                // Placeholder/Mock function for deleting
+                alert(`O'chirish funksiyasi faol emas. DELETE API kerak. ID: ${id}`);
+                fetchQuestions(); // Refresh list
+            }
+        }
+
+        /**
+         * Forma yuborilganda savol yaratish (yoki tahrirlash) jarayonini boshqaradi.
+         */
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            if (editingId !== null) {
+                alert("Tahrirlash funksiyasi (PUT) hali implementatsiya qilinmagan.");
+                return;
+            }
+
+            const vacancy_id_str = document.getElementById('vacancySelect').value;
+            const title = document.getElementById('questionTitle').value.trim();
+            const question_type = document.getElementById('questionType').value;
+            const is_required = document.getElementById('isRequired').checked;
+            
+            if (!vacancy_id_str || document.getElementById('vacancySelect').disabled) {
+                alert("Iltimos, vakansiyalar yuklanishini kuting yoki vakansiya mavjudligini tekshiring.");
+                return;
+            }
+
+            // Prepare the data for the API
+            const questionData = {
+                vacancy_id: parseInt(vacancy_id_str, 10),
+                title: title,
+                question_type: question_type,
+                is_required: is_required
+            };
+
+            // Call the creation API
+            await createQuestion(questionData);
+        }
+    </script>
+</body>
+</html>
